@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  ACTIVE
+  SAFE
+  OVERDUE
+  SOS
+}
+
+enum SafetyEventType {
+  SESSION_STARTED
+  CHECK_IN
+  LOCATION_UPDATE
+  SOS_TRIGGERED
+  OVERDUE
+  COMPLETED
+}
+
+model SafetySession {
+  id                  String        @id @default(uuid()) @db.Uuid
+  ownerName           String        @db.VarChar(100)
+  destination         String        @db.VarChar(200)
+  travelMode          String        @db.VarChar(40)
+  durationMinutes     Int
+  trustedContactName  String        @db.VarChar(100)
+  trustedContactPhone String        @db.VarChar(30)
+  shareCode           String        @unique @db.VarChar(32)
+  status              SessionStatus @default(ACTIVE)
+  lastLatitude        Float?
+  lastLongitude       Float?
+  lastCheckInAt       DateTime
+  nextCheckInAt       DateTime
+  startedAt           DateTime      @default(now())
+  endedAt             DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  events              SafetyEvent[]
+
+  @@index([status])
+  @@index([nextCheckInAt])
+}
+
+model SafetyEvent {
+  id        String          @id @default(uuid()) @db.Uuid
+  sessionId String          @db.Uuid
+  type      SafetyEventType
+  latitude  Float?
+  longitude Float?
+  message   String?         @db.VarChar(500)
+  createdAt DateTime        @default(now())
+  session   SafetySession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
