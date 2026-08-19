@@ -61,6 +61,13 @@ export const sosSchema = z
     path: ["latitude"],
   });
 
+export const riskAssessmentSchema = z
+  .object({
+    travelMode: z.enum(["WALKING", "CYCLING", "PUBLIC_TRANSPORT", "CAR", "OTHER"]).optional(),
+    context: z.string().trim().min(1).max(500).optional(),
+  })
+  .strict();
+
 export const idSchema = z.string().uuid();
 export const shareCodeSchema = z.string().regex(/^[A-Za-z0-9_-]{20,32}$/);
 
@@ -68,3 +75,4 @@ export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type CheckInInput = z.infer<typeof checkInSchema>;
 export type LocationInput = z.infer<typeof locationSchema>;
 export type SosInput = z.infer<typeof sosSchema>;
+export type RiskAssessmentInput = z.infer<typeof riskAssessmentSchema>;

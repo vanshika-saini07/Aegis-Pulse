@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { HttpError } from "../lib/httpError.js";
+import { serializeRiskAssessment } from "./riskAssessmentService.js";
 import type {
   CheckInInput,
   CreateSessionInput,
@@ -19,7 +20,16 @@ const sessionWithEvents = {
     orderBy: { createdAt: "desc" as const },
     take: 30,
   },
+  riskAssessments: {
+    orderBy: { createdAt: "desc" as const },
+    take: 1,
+  },
 };
+
+function serializeSession<T extends { riskAssessments: Parameters<typeof serializeRiskAssessment>[0][] }>(session: T) {
+  const { riskAssessments, ...base } = session;
+  return { ...base, latestRiskAssessment: serializeRiskAssessment(riskAssessments[0] ?? null) };
+}
 
 function nextCheckIn(now: Date, durationMinutes: number) {
   const intervalMinutes = Math.min(15, durationMinutes);
@@ -55,7 +65,7 @@ async function getFullSession(tx: Prisma.TransactionClient, id: string) {
   if (!session) {
     throw new HttpError(404, "SESSION_NOT_FOUND", "Safety session not found.");
   }
-  return session;
+  return serializeSession(session);
 }
 
 export async function createSession(input: CreateSessionInput) {
@@ -63,7 +73,7 @@ export async function createSession(input: CreateSessionInput) {
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
-      return await prisma.safetySession.create({
+      const session = await prisma.safetySession.create({
         data: {
           ownerName: input.ownerName,
           destination: input.destination,
@@ -89,6 +99,7 @@ export async function createSession(input: CreateSessionInput) {
         },
         include: sessionWithEvents,
       });
+      return serializeSession(session);
     } catch (error) {
       const isShareCodeCollision =
         error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";

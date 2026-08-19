@@ -1,4 +1,4 @@
-import type { Coordinates, CreateSessionPayload, SafetySession } from "../types";
+import type { Coordinates, CreateSessionPayload, RiskAssessment, RiskAssessmentPayload, SafetySession } from "../types";
 
 interface ApiErrorBody {
   error?: {
@@ -73,4 +73,11 @@ export const api = {
       method: "POST",
       body: "{}",
     }),
+  generateRiskAssessment: (id: string, payload: RiskAssessmentPayload) =>
+    request<RiskAssessment>(`/api/sessions/${id}/risk-assessment`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getLatestRiskAssessment: (shareCode: string) =>
+    request<RiskAssessment>(`/api/sessions/${encodeURIComponent(shareCode)}/risk-assessment`),
 };

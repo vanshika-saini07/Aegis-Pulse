@@ -1,4 +1,5 @@
 export type SessionStatus = "ACTIVE" | "SAFE" | "OVERDUE" | "SOS";
+export type RiskLevel = "LOW" | "MODERATE" | "HIGH";
 
 export type EventType =
   | "SESSION_STARTED"
@@ -15,6 +16,17 @@ export interface SafetyEvent {
   latitude: number | null;
   longitude: number | null;
   message: string | null;
+  createdAt: string;
+}
+
+export interface RiskAssessment {
+  id: string;
+  riskLevel: RiskLevel;
+  summary: string;
+  contributingFactors: string[];
+  safetyActions: string[];
+  recommendedCheckInMinutes: number;
+  modelName: string;
   createdAt: string;
 }
 
@@ -37,6 +49,7 @@ export interface SafetySession {
   createdAt: string;
   updatedAt: string;
   events: SafetyEvent[];
+  latestRiskAssessment: RiskAssessment | null;
 }
 
 export interface Coordinates {
@@ -53,4 +66,9 @@ export interface CreateSessionPayload {
   trustedContactPhone: string;
   latitude?: number;
   longitude?: number;
+}
+
+export interface RiskAssessmentPayload {
+  travelMode?: CreateSessionPayload["travelMode"];
+  context?: string;
 }

@@ -23,6 +23,12 @@ enum SafetyEventType {
   COMPLETED
 }
 
+enum RiskLevel {
+  LOW
+  MODERATE
+  HIGH
+}
+
 model SafetySession {
   id                  String        @id @default(uuid()) @db.Uuid
   ownerName           String        @db.VarChar(100)
@@ -42,9 +48,26 @@ model SafetySession {
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   events              SafetyEvent[]
+  riskAssessments     RiskAssessment[]
 
   @@index([status])
   @@index([nextCheckInAt])
+}
+
+model RiskAssessment {
+  id                        String        @id @default(uuid()) @db.Uuid
+  sessionId                 String        @db.Uuid
+  riskLevel                 RiskLevel
+  summary                   String        @db.VarChar(600)
+  contributingFactors       Json
+  safetyActions             Json
+  recommendedCheckInMinutes Int
+  assessmentContext         String?       @db.VarChar(500)
+  modelName                 String        @db.VarChar(100)
+  createdAt                 DateTime      @default(now())
+  session                   SafetySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
 }
 
 model SafetyEvent {
